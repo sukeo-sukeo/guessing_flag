@@ -6,30 +6,65 @@
   <title>Document</title>
 </head>
 <style>
-  dl {
-    display: flex;
+  #main_wrapper {
+    width: 90%;
   }
   button, select {
     cursor: pointer;
   }
-  .flag_pic {
-    margin-top: 50px;
-    width: 100%;
-    max-width: 250px;
-    height: 150px;
+  #header_wrapper {
+    margin-bottom: 10px;
   }
+  #cauntry_name_wrapper,
+  #cauntry_flag_wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    width: inherit;
+  }
+  #cauntry_name_wrapper {
+
+  }
+  #cauntry_flag_wrapper {
+  }
+  .flag_name {
+    font-size: 16px;
+    font-weight: bold;
+    border: 2px solid black;
+    border-radius: 5px;
+    margin: 5px;
+    padding: 5px;
+    cursor: pointer;
+  }
+  .flag_pic {
+    margin: 10px;
+    max-width: 140px;
+    height: 90px;
+    cursor: pointer;
+  }
+  .clicked {
+    border: 4px solid red;
+    box-shadow: 5px 4px 0px black;
+    margin: 0px 5px 4px 0px;
+  }
+  .corrected {
+    visibility: hidden;
+  }
+
 </style>
 <body>
-  <h1>Hello World!</h1>
-  <select id="sub_region">
-  </select>
-  <br/>
-  <div id="cauntry_name_wrapper">
-
-  </div>
-  <div id="cauntry_flag_wrapper">
-
-  </div>
+  <div id="main_wrapper">
+    <div id="header_wrapper">
+      <h1>Hello World!</h1>
+      <select id="sub_region">
+      </select>
+    </div>
+    <div id="cauntry_name_wrapper">
+  
+    </div>
+    <div id="cauntry_flag_wrapper">
+  
+    </div>
+  </div>  
   <script src="./main.js"></script>
 </body>
 </html>

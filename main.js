@@ -4,11 +4,9 @@ const SELECT_BOX = document.querySelector('#sub_region')
 const NAME_WRAPPER = document.querySelector('#cauntry_name_wrapper')
 const FLAG_WRAPPER = document.querySelector('#cauntry_flag_wrapper')
 
-let correct = null
+let correctCount = null
 
 const baseUrl = 'https://restcountries.eu/rest/v2/';
-
-const randomNum = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
 (() => {
   fetch(baseUrl + 'all')
@@ -23,6 +21,7 @@ const randomNum = (min, max) => Math.floor(Math.random() * (max - min + 1)) + mi
           dict.set(e.subregion, 1);
         }
       });
+    
       dict.forEach((v, key) => {
         createTag('option', ['value', key], key + ' : ' + v + 'カ国', SELECT_BOX)
       });
@@ -30,69 +29,125 @@ const randomNum = (min, max) => Math.floor(Math.random() * (max - min + 1)) + mi
 })();
 
 SELECT_BOX.addEventListener('change', event => {
-  console.log(event.target.value);
+  correctCount = 0;
   initElements(NAME_WRAPPER, FLAG_WRAPPER)
   
   fetch(baseUrl + 'subregion/' + event.target.value)
     .then((res) => res.json())
-    .then((data) => createHTML(data))
-    .then(() => startGame());
+    .then((data) => {
+      console.log(data);
+      const nameData = shuffle(formatData(data).nameData)
+      const flagData = shuffle(formatData(data).flagData)
+      createHTML(nameData, flagData)
+    })
+    .then(() => {
+      const NAME_CARDS = document.querySelectorAll(".flag_name");
+      const FLAG_CARDS = document.querySelectorAll(".flag_pic");
+      const CARDS = [...NAME_CARDS, ...FLAG_CARDS];
+      playGame(CARDS)
+    });
 })
 
-const createHTML = (data) => {
-  data.forEach((el) => {
+const playGame = (CARDS) => {
+  if (correctCount === CARDS.length / 2) {
+    gemaClear()
+    return
+  }
+  let answers = []
+  CARDS.forEach((card) => {
+    card.onclick = e => {
+      const cardName = e.target.className.split(' ')[1]
+      const cardPlace = e.target.className.split(' ')[0]
+      // １枚めと同じ場所のカードは選択できない
+      if (answers.length === 1 && answers[0][0] === cardPlace) {
+        return
+      } else {
+        e.target.classList.add('clicked')
+        answers.push([cardPlace, cardName])
+      }
+      if (answers.length === 2) {
+        judge(answers, CARDS);
+      }
+    };
+  });
+};
+
+const judge = (answers, CARDS) => {
+  if (answers[0][1] === answers[1][1]) {
+    console.log('正解！');
+    changeStyle(
+      /*deleteClassName =*/ "clicked",
+      /*addClassName =*/ "corrected",
+      /*timer =*/ 1000
+    );
+    correctCount++
+    console.log(correctCount);
+  } else {
+    console.log('間違い');
+    changeStyle(
+      /*deleteClassName =*/ "clicked",
+      /*addClassName =*/ false,
+      /*timer =*/ 1000
+    );
+  }
+  answers.length = 0
+  playGame(CARDS)
+}
+
+const gemaClear = () => {
+  correctCount = 0
+  initElements(NAME_WRAPPER, FLAG_WRAPPER)
+  NAME_WRAPPER.innerHTML = '<h1>Mission Complete!!</h1>'
+}
+
+const shuffle = ([...arr]) => {
+  let m = arr.length
+  while (m) {
+    const i = Math.floor(Math.random() * m--)
+    console.log(i);
+    [arr[m], arr[i]] = [arr[i], arr[m]]
+  }
+  return arr
+};
+
+const formatData = (data) => {
+  let nameData = [];
+  let flagData = [];
+  data.forEach((d) => {
+    nameData.push({
+      name: d.name,
+      translations: d.translations,
+    });
+    flagData.push({
+      name: d.name,
+      flag: d.flag,
+    });
+  });
+  return {
+    nameData,
+    flagData,
+  };
+};
+
+const createHTML = (nameData, flagData) => {
+  console.log(nameData, flagData);
+  nameData.forEach((el) => {
     createTag('p', ['class', `flag_name ${el.name.replace(/\s/g, '_')}`], `${el.translations.ja}`, NAME_WRAPPER);
+  });
+  flagData.forEach((el) => {
     createTag('img', [['src', el.flag],['class', `flag_pic ${el.name.replace(/\s/g, '_')}`]], false, FLAG_WRAPPER);
   });
 }
 
-
-const startGame = () => {
-  const NAME_CARDS = document.querySelectorAll('.flag_name');
-  const FLAG_CARDS = document.querySelectorAll('.flag_pic');
-  const CARDS = [...NAME_CARDS, ...FLAG_CARDS]
-  
-  let answers = []
-
-  CARDS.forEach((flag) => {
-    flag.addEventListener('click', (e) => {
-      const card = e.target
-      const cardName = card.className.split(' ')[1]
-      const cardID = card.className.split(' ')[0]
-      if (answers.length === 1 && answers[0][0] === cardID) {
-        return
-      } else {
-        card.classList.add('clicked')
-        answers.push([cardID, cardName])
-      }
-      if (answers.length === 2) {
-        doJudge(answers, card);
-      }
-    });
-  });
-};
-
-const doJudge = answers => {
-  if (answers[0][1] === answers[1][1]) {
-    console.log('正解');
-    correct += 1
-    setTimeout(() => classNames_remove_or_add('clicked', 'corrected'), 1000)
-  } else {
-    console.log('間違い');
-    setTimeout(() => classNames_remove_or_add('clicked', false), 1000)
-  }
-  answers.length = 0
-  startGame()
+const changeStyle = (delClassName, addClassName, timer) => {
+  setTimeout(() => {
+    const elements = document.querySelectorAll(`.${delClassName}`)
+    elements.forEach(element => element.classList.remove(delClassName))
+    if (addClassName) {
+      elements.forEach(element => element.classList.add(addClassName));
+    }
+  }, timer)
 }
-
-const classNames_remove_or_add = (className, addName) => {
-  const elements = document.querySelectorAll(`.${className}`)
-  elements.forEach(element => element.classList.remove(className))
-  if (addName) {
-    elements.forEach(element => element.classList.add(addName));
-  }
-}
-
 
 const initElements = (...args) => {
   args.forEach(arg => {
@@ -101,10 +156,6 @@ const initElements = (...args) => {
     }
   });
 };
-
-
-
-
 
 //createTag('p', ['id', 'user_name' ], 'username: ', data_wrapper) return <p id='user_name'>username: </p>
 //attrs, contentが不要の時はfalseを引数に入れてください

@@ -5,6 +5,7 @@ const NAME_WRAPPER = document.querySelector('#cauntry_name_wrapper')
 const FLAG_WRAPPER = document.querySelector('#cauntry_flag_wrapper')
 
 let correctCount = null
+let referMarkers
 
 const baseUrl = 'https://restcountries.eu/rest/v2/';
 
@@ -12,8 +13,8 @@ const baseUrl = 'https://restcountries.eu/rest/v2/';
   fetch(baseUrl + 'all')
     .then((res) => res.json())
     .then((data) => {
-      const dict = makeDict(data)
-      dict.forEach((v, key) => {
+      const subregions = makeDict(data)
+      subregions.forEach((_, key) => {
         if (key) {
           createTag(
              /*tag*/     "button",
@@ -33,31 +34,33 @@ SELECT_BOX.addEventListener('click', event => {
   console.log(event.target.textContent);
   correctCount = 0;
   initElements(NAME_WRAPPER, FLAG_WRAPPER)
+  if (referMarkers) {
+    removeMarker(referMarkers)
+  }
 
   fetch(baseUrl + 'subregion/' + event.target.textContent)
     .then((res) => res.json())
     .then((data) => {
-      // console.log(data);
+      console.log(data);
       const nameData = shuffle(formatData(data).nameData)
       const flagData = shuffle(formatData(data).flagData)
       setDOM(nameData, flagData)
       return flagData
     })
     .then((data) => {
-      data.forEach((item) => {
-        console.log(item.latlng);
-        const latlang_x = item.latlng[0]
-        const latlang_y = item.latlng[1]
-        const name = item.translations.ja
-        const link = 'link'
-        const point = marker([latlang_x, latlang_y], name, link)
-        point.addTo(WORLDMAP);
-      })      
+      const markers = data.map(d => {
+        return makeMarker([d.latlng[0], d.latlng[1]], d.translations.ja, 'link')
+      })
+      referMarkers = markers
+      markers.forEach(marker => {
+        marker.addTo(WORLDMAP)
+      })
     })
     .then(() => {
-      const NAME_CARDS = document.querySelectorAll(".flag_name");
+      const NAME_CARDS = document.querySelectorAll(".leaflet-marker-icon");
       const FLAG_CARDS = document.querySelectorAll(".flag_pic");
       const CARDS = [...NAME_CARDS, ...FLAG_CARDS];
+      console.log(CARDS);
       playGame(CARDS)
     });
 })
@@ -68,16 +71,21 @@ const playGame = (CARDS) => {
     return
   }
   let answers = []
+  console.log(referMarkers);
+  console.log(CARDS);
   CARDS.forEach((card) => {
     card.onclick = e => {
-      const cardName = e.target.className.split(' ')[1]
-      const cardPlace = e.target.className.split(' ')[0]
+      // console.log(e.target.className.split(' '));
+
+      const mapAns = e.target.className.split(' ')[1]
+      const picAns = e.target.className.split(' ')[2]
+      console.log(picAns);
       // １枚めと同じ場所のカードは選択できない
-      if (answers.length === 1 && answers[0][0] === cardPlace) {
+      if (answers.length === 1 && answers[0][0] === picAns) {
         return
       } else {
         e.target.classList.add('clicked')
-        answers.push([cardPlace, cardName])
+        answers.push([picAns, mapAns])
       }
       if (answers.length === 2) {
         judge(answers, CARDS);
@@ -142,7 +150,6 @@ const formatData = (data) => {
 };
 
 const setDOM = (nameData, flagData) => {
-  console.log(nameData, flagData);
   nameData.forEach((el) => {
     createTag(
       "p",
@@ -156,7 +163,7 @@ const setDOM = (nameData, flagData) => {
       "img",
       [
         ["src", el.flag],
-        ["class", `flag_pic ${el.name.replace(/\s/g, "_")}`],
+        ["class", `flag_pic ${el.name.replace(/\s/g, "_")} ${el.latlng.join('_')}`],
       ],
       false,
       FLAG_WRAPPER

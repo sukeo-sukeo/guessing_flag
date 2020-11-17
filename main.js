@@ -1,7 +1,6 @@
 'use strict'
 
 const SELECT_BOX = document.querySelector('#sub_region')
-const NAME_WRAPPER = document.querySelector('#cauntry_name_wrapper')
 const FLAG_WRAPPER = document.querySelector('#cauntry_flag_wrapper')
 
 let correctCount = null
@@ -30,10 +29,18 @@ const baseUrl = 'https://restcountries.eu/rest/v2/';
     });
 })();
 
+document
+  .querySelector("#title")
+  .addEventListener("click", () => WORLDMAP.setView([36, 138], 2));
+
 SELECT_BOX.addEventListener('click', event => {
-  console.log(event.target.textContent);
+  if (event.target.id === 'sub_region') {
+    return
+  }
+
   correctCount = 0;
-  initElements(NAME_WRAPPER, FLAG_WRAPPER)
+  initElements(FLAG_WRAPPER)
+
   if (referMarkers) {
     removeMarker(referMarkers)
   }
@@ -42,73 +49,83 @@ SELECT_BOX.addEventListener('click', event => {
     .then((res) => res.json())
     .then((data) => {
       console.log(data);
-      // const nameData = shuffle(formatData(data).nameData)
       const flagData = shuffle(formatData(data))
       setDOM(flagData)
       return flagData
     })
     .then((data) => {
+      console.log(data);
       const markers = data.map(d => {
         return makeMarker([d.latlng[0], d.latlng[1]], d.translations.ja, 'link')
       })
-      //markersの参照(referMarkers)をつくる
+      //どこからでも参照できるようにmarkers[]の参照(referMarkers[])をつくっておく
       referMarkers = markers
+      let sumLat = null
+      let sumLng = null
       markers.forEach(marker => {
+        sumLat += marker._latlng.lat
+        sumLng += marker._latlng.lng
         marker.addTo(WORLDMAP)
       })
+      WORLDMAP.setView([sumLat / markers.length, sumLng / markers.length], 4);
       return data
     })
     .then((data) => {
       const MARKERS_DOM = document.querySelectorAll(".leaflet-marker-icon");
-      MARKERS_DOM.forEach((dom, i) => {
-        dom.classList.add(data[i].latlng.join('_'))
-        // const newClass = dom.className.split(" ")
-        // newClass.splice(2, 0, data[i].latlng.join("_")) 
-        // dom.setAttribute('class', newClass)
-      })
+      const FLAGS_DOM = document.querySelectorAll(".flag_pic");
+      MARKERS_DOM.forEach((dom, i) => dom.classList.add(data[i].latlng.join('_')))
+      return [...MARKERS_DOM, ...FLAGS_DOM];
     })
-    .then(() => {
-      const MARKERS = document.querySelectorAll(".leaflet-marker-icon");
-      const FLAGS = document.querySelectorAll(".flag_pic");
-      const CARDS = [...MARKERS, ...FLAGS];
-      console.log(CARDS);
-      playGame(CARDS)
+    .then((TARGET_DOMS) => {
+      playGame(TARGET_DOMS)
     });
 })
 
-const playGame = (CARDS) => {
-  if (correctCount === CARDS.length / 2) {
+const playGame = (TERGET_DOMS) => {
+  if (correctCount === TERGET_DOMS.length / 2) {
     gemaClear()
     return
   }
   let answers = []
-  // console.log(referMarkers);
-  // console.log(CARDS);
-  CARDS.forEach((card) => {
-    card.onclick = e => {
-      const ansPlace = e.target.className.split(' ')[0]
+  TERGET_DOMS.forEach((target_dom) => {
+    target_dom.onclick = e => {
+      const ansContainer = e.target.className.split(' ')[0]
       const ansLatLng = e.target.className.split(' ')[3]
-      console.log(ansPlace);
-      console.log(ansLatLng);
-      console.log(answers);
-      // １枚めと同じ場所のカードは選択できない
-      if (answers.length === 1 && answers[0][0] === ansPlace) {
-        return
+      if (
+        // １枚めと同じcontainerは選択できない
+        answers.length === 1 && answers[0][0] === ansContainer ||
+        // 正解したマーカーは選択できない
+        e.target.getAttribute("name") === "corrected"
+      ) {
+        return;
       } else {
-        e.target.classList.add('clicked')
-        answers.push([ansPlace, ansLatLng])
+        e.target.classList.add("clicked");
+        answers.push([ansContainer, ansLatLng, e.target]);
       }
       if (answers.length === 2) {
-        judge(answers, CARDS);
+        console.log(answers[0], answers[1]);
+        console.log(TERGET_DOMS);
+        judge(answers, TERGET_DOMS);
       }
     };
   });
 };
 
-const judge = (answers, CARDS) => {
+const judge = (answers, TERGET_DOMS) => {
   if (answers[0][1] === answers[1][1]) {
     console.log('正解！');
-    setTimeout(() => changeClass(/*del =*/ "clicked", /*add =*/ "corrected"), 1000)
+    const markerDom = getImgSrc(answers).markerDom
+    const flagSrc = getImgSrc(answers).flagSrc
+    const flagDom = getImgSrc(answers).flagDom
+    console.log(markerDom, flagSrc);
+    setTimeout(() => {
+      changeClass(/*del =*/ "clicked", /*add =*/ false)
+      flagDom.classList.add('corrected')
+      markerDom.setAttribute('name', 'corrected')
+      markerDom.setAttribute('src', flagSrc)
+      markerDom.style.width = '40px'
+      markerDom.style.height = '30px'
+    }, 1000)
     correctCount++
     console.log(correctCount);
   } else {
@@ -116,13 +133,13 @@ const judge = (answers, CARDS) => {
     setTimeout(() => changeClass(/*del =*/ "clicked", /*add =*/ false), 1000)
   }
   answers.length = 0
-  playGame(CARDS)
+  playGame(TERGET_DOMS)
 }
 
 const gemaClear = () => {
   correctCount = 0
-  initElements(NAME_WRAPPER, FLAG_WRAPPER)
-  NAME_WRAPPER.innerHTML = '<h1>Mission Complete!!</h1>'
+  initElements(FLAG_WRAPPER)
+  FLAG_WRAPPER.innerHTML = '<h1>Mission Complete!!</h1>'
 }
 
 
@@ -140,19 +157,16 @@ const makeDict = (data) => {
 };
 
 const formatData = (data) => {
-  // let nameData = [];
   let flagData = [];
   data.forEach((d) => {
-    // nameData.push({
-    //   name: d.name,
-    //   translations: d.translations
-    // });
-    flagData.push({
-      name: d.name,
-      flag: d.flag,
-      latlng: [d.latlng[0], d.latlng[1]],
-      translations: d.translations
-    });
+    if (d.latlng[0] !== undefined || d.latlng[1] !== undefined) {
+      flagData.push({
+        name: d.name,
+        flag: d.flag,
+        latlng: [d.latlng[0], d.latlng[1]],
+        translations: d.translations
+      })
+    }
   });
   return flagData
 };
@@ -204,6 +218,25 @@ const changeClass = (delClassName, addClassName) => {
     elements.forEach((element) => element.classList.add(addClassName));
   }
 };
+
+const getImgSrc = (answers) => {
+  console.log(answers[0][0], answers[1][0]);
+  if (answers[0][0] !== "flag_pic") {
+    return {
+      markerDom: answers[0][2],
+      markerSrc: answers[0][2].getAttribute("src"),
+      flagDom: answers[1][2],
+      flagSrc: answers[1][2].getAttribute("src"),
+    };
+  } else {
+    return {
+      markerDom: answers[1][2],
+      markerSrc: answers[1][2].getAttribute("src"),
+      flagDom: answers[0][2],
+      flagSrc: answers[0][2].getAttribute("src"),
+    };
+  }
+}
 
 //createTag('p', ['id', 'user_name' ], 'username: ', data_wrapper) return <p id='user_name'>username: </p>
 //attrs, contentが不要の時はfalseを引数に入れてください

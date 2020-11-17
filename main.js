@@ -42,24 +42,35 @@ SELECT_BOX.addEventListener('click', event => {
     .then((res) => res.json())
     .then((data) => {
       console.log(data);
-      const nameData = shuffle(formatData(data).nameData)
-      const flagData = shuffle(formatData(data).flagData)
-      setDOM(nameData, flagData)
+      // const nameData = shuffle(formatData(data).nameData)
+      const flagData = shuffle(formatData(data))
+      setDOM(flagData)
       return flagData
     })
     .then((data) => {
       const markers = data.map(d => {
         return makeMarker([d.latlng[0], d.latlng[1]], d.translations.ja, 'link')
       })
+      //markersの参照(referMarkers)をつくる
       referMarkers = markers
       markers.forEach(marker => {
         marker.addTo(WORLDMAP)
       })
+      return data
+    })
+    .then((data) => {
+      const MARKERS_DOM = document.querySelectorAll(".leaflet-marker-icon");
+      MARKERS_DOM.forEach((dom, i) => {
+        dom.classList.add(data[i].latlng.join('_'))
+        // const newClass = dom.className.split(" ")
+        // newClass.splice(2, 0, data[i].latlng.join("_")) 
+        // dom.setAttribute('class', newClass)
+      })
     })
     .then(() => {
-      const NAME_CARDS = document.querySelectorAll(".leaflet-marker-icon");
-      const FLAG_CARDS = document.querySelectorAll(".flag_pic");
-      const CARDS = [...NAME_CARDS, ...FLAG_CARDS];
+      const MARKERS = document.querySelectorAll(".leaflet-marker-icon");
+      const FLAGS = document.querySelectorAll(".flag_pic");
+      const CARDS = [...MARKERS, ...FLAGS];
       console.log(CARDS);
       playGame(CARDS)
     });
@@ -71,21 +82,21 @@ const playGame = (CARDS) => {
     return
   }
   let answers = []
-  console.log(referMarkers);
-  console.log(CARDS);
+  // console.log(referMarkers);
+  // console.log(CARDS);
   CARDS.forEach((card) => {
     card.onclick = e => {
-      // console.log(e.target.className.split(' '));
-
-      const mapAns = e.target.className.split(' ')[1]
-      const picAns = e.target.className.split(' ')[2]
-      console.log(picAns);
+      const ansPlace = e.target.className.split(' ')[0]
+      const ansLatLng = e.target.className.split(' ')[3]
+      console.log(ansPlace);
+      console.log(ansLatLng);
+      console.log(answers);
       // １枚めと同じ場所のカードは選択できない
-      if (answers.length === 1 && answers[0][0] === picAns) {
+      if (answers.length === 1 && answers[0][0] === ansPlace) {
         return
       } else {
         e.target.classList.add('clicked')
-        answers.push([picAns, mapAns])
+        answers.push([ansPlace, ansLatLng])
       }
       if (answers.length === 2) {
         judge(answers, CARDS);
@@ -129,13 +140,13 @@ const makeDict = (data) => {
 };
 
 const formatData = (data) => {
-  let nameData = [];
+  // let nameData = [];
   let flagData = [];
   data.forEach((d) => {
-    nameData.push({
-      name: d.name,
-      translations: d.translations
-    });
+    // nameData.push({
+    //   name: d.name,
+    //   translations: d.translations
+    // });
     flagData.push({
       name: d.name,
       flag: d.flag,
@@ -143,27 +154,24 @@ const formatData = (data) => {
       translations: d.translations
     });
   });
-  return {
-    nameData,
-    flagData,
-  };
+  return flagData
 };
 
-const setDOM = (nameData, flagData) => {
-  nameData.forEach((el) => {
-    createTag(
-      "p",
-      ["class", `flag_name ${el.name.replace(/\s/g, "_")}`],
-      `${el.translations.ja}`,
-      NAME_WRAPPER
-    );
-  });
+const setDOM = (flagData) => {
+  // nameData.forEach((el) => {
+  //   createTag(
+  //     "p",
+  //     ["class", `flag_name ${el.name.replace(/\s/g, "_")}`],
+  //     `${el.translations.ja}`,
+  //     NAME_WRAPPER
+  //   );
+  // });
   flagData.forEach((el) => {
     createTag(
       "img",
       [
         ["src", el.flag],
-        ["class", `flag_pic ${el.name.replace(/\s/g, "_")} ${el.latlng.join('_')}`],
+        ["class", `flag_pic ${el.name.replace(/\s/g, "_")} _ ${el.latlng.join('_')}`],
       ],
       false,
       FLAG_WRAPPER

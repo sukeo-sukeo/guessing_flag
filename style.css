@@ -1,6 +1,4 @@
 @import url("https://fonts.googleapis.com/css2?family=Indie+Flower&display=swap");
-/* body {
-  } */
 button {
   cursor: pointer;
 }
@@ -11,15 +9,19 @@ h1 {
   cursor: pointer;
 }
 
-/* #main_wrapper {
-    
-  } */
 #header_wrapper {
   margin-bottom: 10px;
   background-color: seashell;
 }
 
-.subregion {
+#header_wrapper .subregion {
+  font-size: 12px;
+}
+
+#control_btns #allflags,
+#control_btns #clear {
+  width: 70px;
+  height: 45px;
   font-size: 12px;
 }
 
@@ -30,13 +32,12 @@ h1 {
 }
 
 #worldmap {
-  position: relative;
-  width: 95%;
+  position: absolute;
+  width: 94%;
   height: 570px;
-  margin: 0 auto;
+  margin: 0 3%;
 }
 
-#cauntry_name_wrapper,
 #cauntry_flag_wrapper {
   display: -webkit-box;
   display: -ms-flexbox;
@@ -52,18 +53,13 @@ h1 {
           align-items: flex-end;
   -ms-flex-line-pack: end;
       align-content: flex-end;
-  position: fixed;
+  position: relative;
   z-index: 1000;
   height: 570px;
   margin-left: 90%;
 }
 
-/* #cauntry_name_wrapper {
-
-  }
-  #cauntry_flag_wrapper {
-  } */
-.flag_pic {
+#cauntry_flag_wrapper .flag_pic {
   margin-top: 5px;
   margin-right: 15px;
   max-width: 60px;

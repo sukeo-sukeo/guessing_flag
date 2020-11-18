@@ -34,7 +34,6 @@ const makeMarker = (lat_lng, name, link) => {
 }
 
 const removeMarker = (markers) => {
-  console.log(markers);
   markers.forEach(marker => {
     WORLDMAP.removeLayer(marker)
   })

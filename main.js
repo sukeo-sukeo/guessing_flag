@@ -1,13 +1,16 @@
 'use strict'
 
 const SELECT_BOX = document.querySelector('#sub_region')
+const BTNS = document.querySelector('#control_btns')
 const FLAG_WRAPPER = document.querySelector('#cauntry_flag_wrapper')
+const TITLE = document.querySelector("#title")
 
 let correctCount = null
 let referMarkers
 
 const baseUrl = 'https://restcountries.eu/rest/v2/';
 
+//ページ来訪時にデータをとりにいきHTMLタグを生成
 (() => {
   fetch(baseUrl + 'all')
     .then((res) => res.json())
@@ -26,40 +29,78 @@ const baseUrl = 'https://restcountries.eu/rest/v2/';
           );
         }
       });
-    });
+      createTag(
+        "button",
+        [
+          ["id", "allflags"],
+          ["class", `btn btn-success m-1 p-1`],
+        ],
+        "ぜんぶ見る",
+        BTNS
+      );
+      createTag(
+        "button",
+        [
+          ["id", "clear"],
+          ["class", `btn btn-danger m-1 p-1`],
+        ],
+        "クリア",
+        BTNS
+      );
+    })
 })();
 
-document
-  .querySelector("#title")
-  .addEventListener("click", () => WORLDMAP.setView([36, 138], 2));
+//タイトルクリックで世界地図全体図にズームアウト
+TITLE.addEventListener("click", () => WORLDMAP.setView([36, 138], 2));
 
+BTNS.addEventListener('click', (e) => {
+  console.log(referMarkers);
+  if (e.target.id === 'control_btns') {
+    return
+  }
+  if (e.target.id === "allflags" && referMarkers === undefined || referMarkers.length === 0) {
+    displayAllflags();
+    WORLDMAP.setView([36, 138], 2);
+    return;
+  }
+  if (e.target.id === 'clear') {
+    correctCount = 0
+    initElements(FLAG_WRAPPER)
+    WORLDMAP.setView([36, 138], 2);
+    referMarkers.length = 0
+    return
+  }
+})
+
+//エリア選択でゲーム開始
 SELECT_BOX.addEventListener('click', event => {
+  console.log(event.target);
   if (event.target.id === 'sub_region') {
     return
   }
-
+  
   correctCount = 0;
   initElements(FLAG_WRAPPER)
 
-  if (referMarkers) {
-    removeMarker(referMarkers)
-  }
 
   fetch(baseUrl + 'subregion/' + event.target.textContent)
     .then((res) => res.json())
     .then((data) => {
+      //dataを整形しシャッフル
       console.log(data);
       const flagData = shuffle(formatData(data))
       setDOM(flagData)
       return flagData
     })
     .then((data) => {
-      console.log(data);
+      //整形したdataをもとに世界地図にマーカーを設置
       const markers = data.map(d => {
         return makeMarker([d.latlng[0], d.latlng[1]], d.translations.ja, 'link')
       })
-      //どこからでも参照できるようにmarkers[]の参照(referMarkers[])をつくっておく
+      //どこからでもマーカーを参照できるように
       referMarkers = markers
+      
+      // subregionの座標の平均値を算出しズーム
       let sumLat = null
       let sumLng = null
       markers.forEach(marker => {
@@ -71,6 +112,7 @@ SELECT_BOX.addEventListener('click', event => {
       return data
     })
     .then((data) => {
+      //classに'座標'文字列を追加しそれで整合を判断できるようにする
       const MARKERS_DOM = document.querySelectorAll(".leaflet-marker-icon");
       const FLAGS_DOM = document.querySelectorAll(".flag_pic");
       MARKERS_DOM.forEach((dom, i) => dom.classList.add(data[i].latlng.join('_')))
@@ -103,8 +145,6 @@ const playGame = (TERGET_DOMS) => {
         answers.push([ansContainer, ansLatLng, e.target]);
       }
       if (answers.length === 2) {
-        console.log(answers[0], answers[1]);
-        console.log(TERGET_DOMS);
         judge(answers, TERGET_DOMS);
       }
     };
@@ -140,8 +180,8 @@ const gemaClear = () => {
   correctCount = 0
   initElements(FLAG_WRAPPER)
   FLAG_WRAPPER.innerHTML = '<h1>Mission Complete!!</h1>'
+  referMarkers.length = 0;
 }
-
 
 const makeDict = (data) => {
   const dict = new Map();
@@ -172,14 +212,6 @@ const formatData = (data) => {
 };
 
 const setDOM = (flagData) => {
-  // nameData.forEach((el) => {
-  //   createTag(
-  //     "p",
-  //     ["class", `flag_name ${el.name.replace(/\s/g, "_")}`],
-  //     `${el.translations.ja}`,
-  //     NAME_WRAPPER
-  //   );
-  // });
   flagData.forEach((el) => {
     createTag(
       "img",
@@ -204,6 +236,9 @@ const shuffle = ([...arr]) => {
 };
 
 const initElements = (...args) => {
+  if (referMarkers) {
+    removeMarker(referMarkers);
+  }
   args.forEach((arg) => {
     while (arg.firstChild) {
       arg.removeChild(arg.firstChild);
@@ -238,7 +273,35 @@ const getImgSrc = (answers) => {
   }
 }
 
-//createTag('p', ['id', 'user_name' ], 'username: ', data_wrapper) return <p id='user_name'>username: </p>
+const displayAllflags = () => {
+  fetch(baseUrl + "all")
+    .then((res) => res.json())
+    .then((data) => {
+      const flagData = formatData(data);
+      const markers = flagData.map((d) => {
+        return makeMarker(
+          [d.latlng[0], d.latlng[1]],
+          d.translations.ja,
+          "link"
+        );
+      });
+      referMarkers = markers;
+      markers.forEach((marker) => {
+        marker.addTo(WORLDMAP);
+      });
+      return flagData;
+    })
+    .then((flagData) => {
+      const markerDOMS = document.querySelectorAll(".leaflet-marker-icon");
+      markerDOMS.forEach((markerDOM, i) => {
+        markerDOM.setAttribute("src", flagData[i].flag);
+        markerDOM.style.width = "40px";
+        markerDOM.style.height = "30px";
+      });
+    });
+};
+
+//createTag('p', ['id', 'user_name' ], 'username: ', data_wrapper)
 //attrs, contentが不要の時はfalseを引数に入れてください
 const createTag = (elementName, attrs, content, parentNode) => {
   const el = document.createElement(elementName);

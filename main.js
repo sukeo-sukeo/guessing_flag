@@ -7,6 +7,7 @@ const TITLE = document.querySelector("#title")
 
 let correctCount = null
 let referMarkers
+let viewMode = false
 
 const baseUrl = 'https://restcountries.eu/rest/v2/';
 
@@ -35,7 +36,7 @@ const baseUrl = 'https://restcountries.eu/rest/v2/';
           ["id", "allflags"],
           ["class", `btn btn-success m-1 p-1`],
         ],
-        "ぜんぶ見る",
+        "ビューモード",
         BTNS
       );
       createTag(
@@ -54,26 +55,45 @@ const baseUrl = 'https://restcountries.eu/rest/v2/';
 TITLE.addEventListener("click", () => WORLDMAP.setView([36, 138], 2));
 
 BTNS.addEventListener('click', (e) => {
-  console.log(referMarkers);
+  const subregion_btns = document.querySelectorAll('.subregion')
   if (e.target.id === 'control_btns') {
     return
   }
-  if (e.target.id === "allflags" && referMarkers === undefined || referMarkers.length === 0) {
+  if (e.target.id === "allflags" &&
+    (referMarkers === undefined || referMarkers.length === 0) &&
+    !viewMode) {
+    console.log('push');
+    viewMode = true
+    subregion_btns.forEach(btn => {
+      btn.classList.remove('btn-primary')
+      btn.classList.add('btn-success')
+    })
     displayAllflags();
     WORLDMAP.setView([36, 138], 2);
     return;
   }
   if (e.target.id === 'clear') {
+    viewMode = false
+    subregion_btns.forEach((btn) => {
+      btn.classList.remove("btn-success");
+      btn.classList.add("btn-primary");
+    });
     correctCount = 0
     initElements(FLAG_WRAPPER)
     WORLDMAP.setView([36, 138], 2);
-    referMarkers.length = 0
+    if (referMarkers !== undefined && referMarkers.length !== 0) {
+      referMarkers.length = 0
+    }
     return
   }
 })
 
 //エリア選択でゲーム開始
 SELECT_BOX.addEventListener('click', event => {
+  if (viewMode) {
+    createViewMode(event.target)
+    return;
+  }
   console.log(event.target);
   if (event.target.id === 'sub_region') {
     return
@@ -82,12 +102,11 @@ SELECT_BOX.addEventListener('click', event => {
   correctCount = 0;
   initElements(FLAG_WRAPPER)
 
-
   fetch(baseUrl + 'subregion/' + event.target.textContent)
     .then((res) => res.json())
     .then((data) => {
       //dataを整形しシャッフル
-      console.log(data);
+      // console.log(data);
       const flagData = shuffle(formatData(data))
       setDOM(flagData)
       return flagData
@@ -300,6 +319,23 @@ const displayAllflags = () => {
       });
     });
 };
+
+const createViewMode = (target) => {
+  fetch(baseUrl + "subregion/" + target.textContent)
+    .then((res) => res.json())
+    .then((data) => {
+      return formatData(data);
+    })
+    .then((data) => {
+      let sumLat = null;
+      let sumLng = null;
+      data.forEach((d) => {
+        sumLat += d.latlng[0];
+        sumLng += d.latlng[1];
+      });
+      WORLDMAP.setView([sumLat / data.length, sumLng / data.length], 4);
+  })
+}
 
 //createTag('p', ['id', 'user_name' ], 'username: ', data_wrapper)
 //attrs, contentが不要の時はfalseを引数に入れてください

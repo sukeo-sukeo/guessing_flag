@@ -1,3 +1,4 @@
+'use strict'
 
 const WORLDMAP = L.map("worldmap").setView([36, 138], 2);
 const URL = "http://{s}.tile.stamen.com/{variant}/{z}/{x}/{y}.png";
@@ -24,11 +25,11 @@ const makeMarker = (lat_lng, name, link) => {
   ]);
 
   Markers_shape[0]
-    .bindTooltip(Markers_shape_nam[0], { permanent: true })
+    .bindTooltip(Markers_shape_nam[0], {
+      permanent: true,
+      // offset: L.point(40, 0)
+    })
     .openTooltip();
-  // Markers_shape[0]
-  //   .bindPopup(console.log(Markers_shape[0]))
-  //   .openPopup()
 
   return Markers_shape[0];
 }

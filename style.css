@@ -18,8 +18,8 @@ h1 {
   font-size: 12px;
 }
 
-#control_btns #allflags,
-#control_btns #clear {
+#control_btns #game_mode,
+#control_btns #view_mode {
   width: 70px;
   height: 45px;
   font-size: 10px;
@@ -36,6 +36,7 @@ h1 {
   width: 94%;
   height: 570px;
   margin: 0 3%;
+  border: 5px solid seashell;
 }
 
 #cauntry_flag_wrapper {
@@ -56,7 +57,8 @@ h1 {
   position: relative;
   z-index: 1000;
   height: 570px;
-  margin-left: 90%;
+  margin-left: 89%;
+  margin-top: 10px;
 }
 
 #cauntry_flag_wrapper .flag_pic {

@@ -7,6 +7,7 @@ const FLAG_WRAPPER = document.querySelector('#cauntry_flag_wrapper')
 const TITLE = document.querySelector("#title")
 
 let correctCount = null
+let mistakeCount = null
 let isViewMode = true
 let referMarkers = []
 let referCircle
@@ -71,6 +72,8 @@ BTNS.addEventListener('click', (e) => {
       btn.classList.add('btn-success')
     })
     clearView()
+    W_MAP.style.borderColor = "seashell";
+    WORLDMAP.setView(INITIAL_LATLNG, 2);
     return;
   }
   if (e.target.id === 'game_mode') {
@@ -80,6 +83,8 @@ BTNS.addEventListener('click', (e) => {
       btn.classList.add("btn-primary");
     });
     clearView();
+    W_MAP.style.borderColor = "seashell";
+    WORLDMAP.setView(INITIAL_LATLNG, 2);
     return
   }
 })
@@ -170,7 +175,7 @@ const goViewMode = () => {
 
 const playGame = (TERGET_DOMS) => {
   if (correctCount === TERGET_DOMS.length / 2) {
-    gemaClear()
+    clearView('Mission Complete!!')
     return
   }
   let answers = []
@@ -216,17 +221,41 @@ const judge = (answers, TERGET_DOMS) => {
   } else {
     console.log('間違い');
     setTimeout(() => changeClass(/*del =*/ "clicked", /*add =*/ false), 1000)
+    mistakeCount++
+    if (mistakeCount === 3) {
+      clearView('game over...')
+      return
+    }
   }
   answers.length = 0
   playGame(TERGET_DOMS)
 }
 
-const gemaClear = () => {
-  correctCount = 0
-  initElements(FLAG_WRAPPER)
-  FLAG_WRAPPER.innerHTML = '<h1>Mission Complete!!</h1>'
+// const gemaClear = () => {
+//   correctCount = 0
+//   initElements(FLAG_WRAPPER)
+//   FLAG_WRAPPER.innerHTML = '<h1>Mission Complete!!</h1>'
+//   referMarkers.length = 0;
+// }
+
+// const gameOver = () => {
+//   correctCount = 0;
+//   initElements(FLAG_WRAPPER);
+//   FLAG_WRAPPER.innerHTML = "<h1>GameOver</h1>";
+//   referMarkers.length = 0;
+// }
+
+const clearView = (...args) => {
+  console.log(args[0]);
+  if (args.length) {
+    console.log(args);
+    FLAG_WRAPPER.innerHTML = `<h1>${args[0]}</h1>`;
+  }
+  correctCount = 0;
+  mistakeCount = 0;
+  initElements(FLAG_WRAPPER);
   referMarkers.length = 0;
-}
+};
 
 const makeDict = (data) => {
   const dict = new Map();
@@ -292,14 +321,6 @@ const initElements = (...args) => {
       arg.removeChild(arg.firstChild);
     }
   });
-};
-
-const clearView = () => {
-  correctCount = 0;
-  initElements(FLAG_WRAPPER);
-  referMarkers.length = 0;
-  W_MAP.style.borderColor = 'seashell';
-  WORLDMAP.setView(INITIAL_LATLNG, 2);
 };
 
 const changeClass = (delClassName, addClassName) => {

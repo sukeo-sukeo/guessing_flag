@@ -56,10 +56,6 @@ const baseUrl = 'https://restcountries.eu/rest/v2/';
     })
 })();
 
-// TITLE.addEventListener('click', () => {
-//   WORLDMAP.removeLayer();
-// })
-
 //タイトルクリックで世界地図全体図にズームアウト
 TITLE.addEventListener("click", () => WORLDMAP.setView(INITIAL_LATLNG, 2));
 

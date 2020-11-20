@@ -11,7 +11,6 @@ h1 {
 
 #header_wrapper {
   margin-bottom: 10px;
-  background-color: seashell;
 }
 
 #header_wrapper .subregion {
@@ -43,8 +42,8 @@ h1 {
 }
 
 #game_wrapper #minimap {
-  left: 1%;
-  top: 70%;
+  left: 2%;
+  top: 67%;
   width: 23%;
   height: 180px;
   position: relative;

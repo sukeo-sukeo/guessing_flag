@@ -1,13 +1,18 @@
 'use strict'
 
-const WORLDMAP = L.map("worldmap").setView([36, 138], 2);
+const INITIAL_LATLNG = [35.681, 0];
+
+const WORLDMAP = L.map("worldmap").setView(INITIAL_LATLNG, 2);
+const MINIMAP = L.map("minimap", { zoomControl: false }).setView(INITIAL_LATLNG, 0);
+
+
 const URL = "http://{s}.tile.stamen.com/{variant}/{z}/{x}/{y}.png";
 
 const init = () => {
-  L.tileLayer(URL, {
+  return L.tileLayer(URL, {
     attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>',
-    variant: "toner-lite",
-  }).addTo(WORLDMAP);
+    variant: "toner-lite"
+  })
 }
 
 const makeMarker = (lat_lng, name, link) => {
@@ -30,7 +35,6 @@ const makeMarker = (lat_lng, name, link) => {
       // offset: L.point(40, 0)
     })
     .openTooltip();
-
   return Markers_shape[0];
 }
 
@@ -40,4 +44,25 @@ const removeMarker = (markers) => {
   })
 }
 
-window.onload = init()
+const removeCircle = (circle) => {
+   MINIMAP.removeLayer(circle);
+}
+
+const makeCircle = (lat, lng) => {
+  if (referCircle) {
+    removeCircle(referCircle)
+  }
+  return L.circle([lat, lng], {
+    radius: 2000 * 1000,
+    color: 'red',
+    fillColor: 'pink',
+    fillOpacity: .5
+ })
+}
+
+const firstLading = () => {
+  init().addTo(WORLDMAP)
+  init().addTo(MINIMAP)
+}
+
+window.onload = firstLading() 

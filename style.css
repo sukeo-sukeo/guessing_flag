@@ -37,6 +37,22 @@ h1 {
   height: 570px;
   margin: 0 3%;
   border: 5px solid seashell;
+  -webkit-box-shadow: 5px 5px 15px black;
+          box-shadow: 5px 5px 15px black;
+  border-radius: 15px;
+}
+
+#minimap {
+  left: 78%;
+  bottom: 2%;
+  width: 20%;
+  height: 180px;
+  display: block;
+  position: absolute;
+  z-index: 10000;
+  -webkit-box-shadow: 0px 0px 10px black;
+          box-shadow: 0px 0px 10px black;
+  border-radius: 5px;
 }
 
 #cauntry_flag_wrapper {

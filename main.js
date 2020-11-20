@@ -9,6 +9,7 @@ const TITLE = document.querySelector("#title")
 let correctCount = null
 let isViewMode = true
 let referMarkers = []
+let referCircle
 
 const baseUrl = 'https://restcountries.eu/rest/v2/';
 
@@ -54,6 +55,10 @@ const baseUrl = 'https://restcountries.eu/rest/v2/';
       );
     })
 })();
+
+// TITLE.addEventListener('click', () => {
+//   WORLDMAP.removeLayer();
+// })
 
 //タイトルクリックで世界地図全体図にズームアウト
 TITLE.addEventListener("click", () => WORLDMAP.setView([36, 138], 2));
@@ -128,9 +133,13 @@ SELECT_BOX.addEventListener('click', event => {
         sumLat += marker._latlng.lat
         sumLng += marker._latlng.lng
         marker.addTo(WORLDMAP)
+        console.log(marker._tooltip._content, marker._latlng);
       })
       //座標平均値にズーム
       WORLDMAP.setView([sumLat / markers.length, sumLng / markers.length], 4);
+      const circle = makeCircle(sumLat / markers.length, sumLng / markers.length)
+      referCircle = circle
+      circle.addTo(MINIMAP)
       return data
     })
     .then((data) => {
@@ -278,6 +287,9 @@ const shuffle = ([...arr]) => {
 const initElements = (...args) => {
   if (referMarkers) {
     removeMarker(referMarkers);
+  }
+  if (referCircle) {
+    removeCircle(referCircle);
   }
   args.forEach((arg) => {
     while (arg.firstChild) {

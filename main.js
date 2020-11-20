@@ -61,7 +61,7 @@ const baseUrl = 'https://restcountries.eu/rest/v2/';
 // })
 
 //タイトルクリックで世界地図全体図にズームアウト
-TITLE.addEventListener("click", () => WORLDMAP.setView([36, 138], 2));
+TITLE.addEventListener("click", () => WORLDMAP.setView(INITIAL_LATLNG, 2));
 
 BTNS.addEventListener('click', (e) => {
   const subregion_btns = document.querySelectorAll('.subregion')
@@ -303,7 +303,7 @@ const clearView = () => {
   initElements(FLAG_WRAPPER);
   referMarkers.length = 0;
   W_MAP.style.borderColor = 'seashell';
-  WORLDMAP.setView([36, 138], 2);
+  WORLDMAP.setView(INITIAL_LATLNG, 2);
 };
 
 const changeClass = (delClassName, addClassName) => {

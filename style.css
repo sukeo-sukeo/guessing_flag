@@ -43,9 +43,9 @@ h1 {
 }
 
 #minimap {
-  left: 78%;
-  bottom: 2%;
-  width: 20%;
+  left: 1%;
+  bottom: 0%;
+  width: 23%;
   height: 180px;
   display: block;
   position: absolute;

@@ -5,6 +5,10 @@ const INITIAL_LATLNG = [35.681, 0];
 const WORLDMAP = L.map("worldmap").setView(INITIAL_LATLNG, 2);
 const MINIMAP = L.map("minimap", { zoomControl: false }).setView(INITIAL_LATLNG, 0);
 const MARKER = document.querySelector('.leaflet-marker-pane')
+const popUpDom = document.getElementsByClassName("leaflet-popup-pane");
+[...popUpDom].forEach((dom) => {
+  dom.style.visibility = "hidden";
+});
 
 console.log(MARKER);
 const MARKER_URL = 'https://unpkg.com/leaflet@1.4.0/dist/images/marker-icon-2x.png'
@@ -38,41 +42,40 @@ const makeMarker = (lat_lng, name, link) => {
       // offset: L.point(40, 0)
     })
     .openTooltip();
+  Markers_shape[0]
+    .bindPopup(Markers_shape_nam[0])
+    .openPopup();
   return Markers_shape[0];
 }
 
 const hiddenName = () => {
   if (referMarkers.length === 0) return
   
-  const cauntryNames = document.querySelectorAll('.leaflet-tooltip')
-
+  const cauntryNames = document.getElementsByClassName('leaflet-tooltip')
+  console.log(popUpDom);
   if (nameHidden) {
-    cauntryNames.forEach((name) => {
+    [...cauntryNames].forEach((name) => {
       name.style.visibility = "visible";
+    });
+    [...popUpDom].forEach((dom) => {
+      dom.style.visibility = 'hidden'
     });
     nameHidden = false
     return
   }
 
   if (!nameHidden) {
-    cauntryNames.forEach(name => {
+    [...cauntryNames].forEach(name => {
       name.style.visibility = 'hidden'
-    })
+    });
+    [...popUpDom].forEach((dom) => {
+      dom.style.visibility = 'visible'
+    });
+
     nameHidden = true
     return
   }  
 }
-
-MARKER.addEventListener('click', e => {
-  if (nameHidden) {
-    console.log('ある');
-    // console.log(referMarkers);
-    // referMarkers[0].bindPopup('hello').openPopup()
-  } else {
-    console.log('ない');
-  }
-})
-
 
 
 const removeMarker = (markers) => {

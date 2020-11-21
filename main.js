@@ -1,11 +1,11 @@
 'use strict'
 onclick
-const W_MAP = document.querySelector('#worldmap')
-const SELECT_BOX = document.querySelector('#sub_region')
-const START_BTN = document.querySelector('#start_btn')
-const SWITCH_BTN = document.querySelector('#name_switch')
-const FLAG_WRAPPER = document.querySelector('#cauntry_flag_wrapper')
-const TITLE = document.querySelector("#title")
+const W_MAP = document.getElementById('worldmap')
+const SELECT_BOX = document.getElementById('sub_region')
+const START_BTN = document.getElementById('start_btn')
+const SWITCH_BTN = document.getElementById('name_switch')
+const FLAG_WRAPPER = document.getElementById('cauntry_flag_wrapper')
+const TITLE = document.getElementById("title")
 
 let correctCount = null
 let mistakeCount = null
@@ -32,7 +32,7 @@ const baseUrl = 'https://restcountries.eu/rest/v2/';
              /*tag*/     "button",
             [
               [/*attr1*/ "id", `${key.replace(/\s+/g, "_")}`],
-              [/*attr2*/ "class", `subregion btn btn-success py-1 px-3`]
+              [/*attr2*/ "class", `subregion btn btn-dark py-1 px-3`]
             ],
              /*value*/   renameKey,
              /*append*/  outlineTag
@@ -93,6 +93,11 @@ SELECT_BOX.addEventListener('click', event => {
     return
   }
   
+  referMarkers.forEach(d => {
+    d.closePopup()
+  })
+
+  // hiddenName()
   // correctCount = 0;
   initElements(FLAG_WRAPPER)
 
@@ -314,14 +319,14 @@ const getImgSrc = (answers) => {
 const changeBtn = (text) => {
   if (text === "もどる") {
     START_BTN.textContent = text;
-    START_BTN.classList.remove("btn-primary");
+    START_BTN.classList.remove("btn-info");
     START_BTN.classList.add("btn-danger");
     START_BTN.style.width = "100px";
     START_BTN.style.left = "85%";
   } else if (text === "テストにチャレンジ") {
     START_BTN.textContent = text;
     START_BTN.classList.remove("btn-danger");
-    START_BTN.classList.add("btn-primary");
+    START_BTN.classList.add("btn-info");
     START_BTN.style.width = "170px";
     START_BTN.style.left = "79%";
   }

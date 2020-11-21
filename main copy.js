@@ -1,19 +1,17 @@
 'use strict'
-onclick
+
 const W_MAP = document.querySelector('#worldmap')
 const SELECT_BOX = document.querySelector('#sub_region')
 const START_BTN = document.querySelector('#start_btn')
-const SWITCH_BTN = document.querySelector('#name_switch')
 const FLAG_WRAPPER = document.querySelector('#cauntry_flag_wrapper')
 const TITLE = document.querySelector("#title")
 
 let correctCount = null
 let mistakeCount = null
+let isViewMode = true
+let gameitems = []
 let referMarkers = []
 let referCircle
-
-let isPlaying = false
-let nameHidden = false
 
 const baseUrl = 'https://restcountries.eu/rest/v2/';
 
@@ -24,24 +22,18 @@ const baseUrl = 'https://restcountries.eu/rest/v2/';
     .then((data) => {
       const subregions = makeDict(data)
       let i = 0
-      subregions.forEach((val, key) => {
+      subregions.forEach((_, key) => {
         if (key) {
           const renameKey = key.replace(key, ja[i])
-          const outlineTag = createTag('div',['class', 'select_btn my-1 mr-3'],false,false)
           createTag(
              /*tag*/     "button",
             [
               [/*attr1*/ "id", `${key.replace(/\s+/g, "_")}`],
-              [/*attr2*/ "class", `subregion btn btn-success py-1 px-3`]
+              [/*attr2*/ "class", `subregion btn btn-success m-1 p-1`]
             ],
              /*value*/   renameKey,
-             /*append*/  outlineTag
+             /*append*/  SELECT_BOX
           );
-          const innerTag = createTag('div', ['class', 'content_wrap m-0 p-0'], false, outlineTag)
-          createTag('p', ['class', 'cauntry_count subregion_content m-0 p-0'], `${val}カ国`, innerTag)
-          createTag("p", ["class", "level subregion_content m-0 p-0"], '', innerTag);
-          createTag('a', [['class', 'info subregion_content m-0 p-0'],['href', '#']], `${renameKey}を調べる`, outlineTag)
-          SELECT_BOX.appendChild(outlineTag)
         }
         i++;
       });
@@ -51,68 +43,83 @@ const baseUrl = 'https://restcountries.eu/rest/v2/';
 //タイトルクリックで世界地図全体図にズームアウト
 TITLE.addEventListener("click", () => WORLDMAP.setView(INITIAL_LATLNG, 2));
 
-SWITCH_BTN.addEventListener("click", () => hiddenName());
-
 START_BTN.addEventListener('click', () => {
-  if (isPlaying) {
-    if (confirm("テストをあきらめて地域選択にもどりますか？")) {
-      changeBtn('テストにチャレンジ')
-      clearView()
-      return
-    } else {
-      return;
-    }
-  }
-  console.log(referMarkers);
-  if (referMarkers.length === 0) {
+  console.log(gameitems);
+  if (gameitems.length === 0) {
     alert('地域を選択してください')
     return
   }
-  setFlagDOM(referMarkers)
-  const MARKERS_DOM = document.querySelectorAll(".leaflet-marker-icon");
-  const FLAGS_DOM = document.querySelectorAll(".flag_pic");
-  MARKERS_DOM.forEach(d => {
-    d.setAttribute('src', MARKER_URL)
-    d.style.width = "30px";
-    d.style.height = "30px";
-  })
-  changeBtn('もどる')
 
-  const TARGET_DOMS = [...MARKERS_DOM, ...FLAGS_DOM]
-  playGame(TARGET_DOMS)
 
+  // playGame(gameitems)
+
+  // const subregion_btns = document.querySelectorAll('.subregion')
+  // if (e.target.id === 'control_btns') {
+  //   return
+  // }
+  // if (e.target.id === "view_mode") {
+  //   isViewMode = true
+  //   subregion_btns.forEach(btn => {
+  //     btn.classList.remove('btn-primary')
+  //     btn.classList.add('btn-success')
+  //   })
+  //   clearView()
+  //   W_MAP.style.borderColor = "seashell";
+  //   WORLDMAP.setView(INITIAL_LATLNG, 2);
+  //   return;
+  // }
+  // if (e.target.id === 'game_mode') {
+  //   isViewMode = false
+  //   subregion_btns.forEach((btn) => {
+  //     btn.classList.remove("btn-success");
+  //     btn.classList.add("btn-primary");
+  //   });
+  //   clearView();
+  //   W_MAP.style.borderColor = "seashell";
+  //   WORLDMAP.setView(INITIAL_LATLNG, 2);
+  //   return
+  // }
 })
 
-//エリア選択で
+//エリア選択でゲーム開始
 SELECT_BOX.addEventListener('click', event => {
-  console.log(event.target.className.split(' ')[0]);
-  if (event.target.className.split(" ")[0] !== "subregion") {
-    return;
-  }
-  if (isPlaying) {
+  console.log(event.target);
+  //gameplay中はreturn
+  if (!isViewMode && referMarkers.length !== 0) {
     return
   }
+  //btn以外のクリックはreturn
+  if (event.target.id === 'sub_region') {
+    return
+  }
+  if (isViewMode) {
+    W_MAP.style.borderColor = "mediumseagreen";
+  } else {
+    W_MAP.style.borderColor = "cornflowerblue";
+  }
   
-  // correctCount = 0;
+  correctCount = 0;
   initElements(FLAG_WRAPPER)
 
   const target = event.target.id.replace(/_/g, " ");
   fetch(baseUrl + 'subregion/' + target)
     .then((res) => res.json())
     .then((data) => {
-      //dataを整形
+      //dataを整形しシャッフル
       return shuffle(formatData(data))
     })
     .then((data) => {
-      //マーカーを設置
+      if (!isViewMode) {
+        setFlagDOM(data);
+      }
+      //世界地図にマーカーを設置
       const markers = data.map(d => {
         return makeMarker([d.latlng[0], d.latlng[1]], d.translations.ja, 'link')
       })
-
       //マーカーデータの参照を作成
       referMarkers = markers
-
-      //ズームインの為の座標値を算出
+      
+      //subregionの座標の平均値を算出
       let sumLat = null
       let sumLng = null
       markers.forEach(marker => {
@@ -121,7 +128,7 @@ SELECT_BOX.addEventListener('click', event => {
         marker.addTo(WORLDMAP)
         console.log(marker._tooltip._content, marker._latlng);
       })
-      //ズームしてポインタを表示
+      //座標平均値にズーム
       WORLDMAP.setView([sumLat / markers.length, sumLng / markers.length], 4);
       const circle = makeCircle(sumLat / markers.length, sumLng / markers.length)
       referCircle = circle
@@ -129,25 +136,40 @@ SELECT_BOX.addEventListener('click', event => {
       return data
     })
     .then((data) => {
+      console.log(data);
+      //classに'座標'文字列を追加しそれで整合を判断できるようにする
       const MARKERS_DOM = document.querySelectorAll(".leaflet-marker-icon");
-      MARKERS_DOM.forEach((DOM, i) => {
-        //classの座標値でjudgeする方向性
-        DOM.classList.add(data[i].latlng.join("_"));
-        //マーカーのimgを国旗に変更
-        DOM.setAttribute("src", data[i].flag);
-        DOM.style.width = "60px";
-        DOM.style.height = "40px";
-      })
+      MARKERS_DOM.forEach((dom, i) => dom.classList.add(data[i].latlng.join('_')))
+      if (!isViewMode) {
+        const FLAGS_DOM = document.querySelectorAll(".flag_pic");
+        const TARGET_DOMS = [...MARKERS_DOM, ...FLAGS_DOM];
+        return TARGET_DOMS
+      } else {
+        MARKERS_DOM.forEach((DOM, i) => {
+          DOM.setAttribute("src", data[i].flag);
+          DOM.style.width = "60px";
+          DOM.style.height = "40px";
+        })
+      }
     })
+    .then((TARGET_DOMS) => {
+      console.log(TARGET_DOMS);
+      gameitems = TARGET_DOMS
+      if (!isViewMode) {
+        playGame(TARGET_DOMS)
+      } else {
+        goViewMode()
+      }
+    });
 })
 
+const goViewMode = () => {
+  console.log('viewしてます');
+}
 
 const playGame = (TERGET_DOMS) => {
-  isPlaying = true
   if (correctCount === TERGET_DOMS.length / 2) {
-    isPlaying = false
     clearView('Mission Complete!!')
-    changeBtn("テストにチャレンジ");
     return
   }
   let answers = []
@@ -196,7 +218,6 @@ const judge = (answers, TERGET_DOMS) => {
     mistakeCount++
     if (mistakeCount === 3) {
       clearView('game over...')
-      changeBtn("テストにチャレンジ");
       return
     }
   }
@@ -204,8 +225,21 @@ const judge = (answers, TERGET_DOMS) => {
   playGame(TERGET_DOMS)
 }
 
+// const gemaClear = () => {
+//   correctCount = 0
+//   initElements(FLAG_WRAPPER)
+//   FLAG_WRAPPER.innerHTML = '<h1>Mission Complete!!</h1>'
+//   referMarkers.length = 0;
+// }
+
+// const gameOver = () => {
+//   correctCount = 0;
+//   initElements(FLAG_WRAPPER);
+//   FLAG_WRAPPER.innerHTML = "<h1>GameOver</h1>";
+//   referMarkers.length = 0;
+// }
+
 const clearView = (...args) => {
-  isPlaying = false
   console.log(args[0]);
   if (args.length) {
     console.log(args);
@@ -246,13 +280,12 @@ const formatData = (data) => {
 };
 
 const setFlagDOM = (flagData) => {
-  console.log(flagData);
   flagData.forEach((el) => {
     createTag(
       "img",
       [
-        ["src", el._icon.currentSrc],
-        ["class", `flag_pic _ _ ${el._latlng.lat}_${el._latlng.lng}`],
+        ["src", el.flag],
+        ["class", `flag_pic ${el.name.replace(/\s/g, "_")} _ ${el.latlng.join('_')}`],
       ],
       false,
       FLAG_WRAPPER
@@ -311,21 +344,6 @@ const getImgSrc = (answers) => {
   }
 }
 
-const changeBtn = (text) => {
-  if (text === "もどる") {
-    START_BTN.textContent = text;
-    START_BTN.classList.remove("btn-primary");
-    START_BTN.classList.add("btn-danger");
-    START_BTN.style.width = "100px";
-    START_BTN.style.left = "85%";
-  } else if (text === "テストにチャレンジ") {
-    START_BTN.textContent = text;
-    START_BTN.classList.remove("btn-danger");
-    START_BTN.classList.add("btn-primary");
-    START_BTN.style.width = "170px";
-    START_BTN.style.left = "79%";
-  }
-};
 
 
 //createTag('p', ['id', 'user_name' ], 'username: ', data_wrapper)
@@ -368,7 +386,7 @@ const ja = [
   "",
   "南アメリカ",
   "西アジア",
-  "オーストラリア",
+  "オーストラリアとニュージーランド",
   "西ヨーロッパ",
   "東ヨーロッパ",
   "中央アメリカ",

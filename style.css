@@ -13,15 +13,34 @@ h1 {
   margin-bottom: 10px;
 }
 
-#header_wrapper .subregion {
-  font-size: 12px;
+#header_wrapper #sub_region {
+  overflow: scroll;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  height: 120px;
 }
 
-#control_btns #game_mode,
-#control_btns #view_mode {
-  width: 70px;
-  height: 45px;
-  font-size: 10px;
+#header_wrapper #sub_region .subregion {
+  width: -webkit-max-content;
+  width: -moz-max-content;
+  width: max-content;
+  height: 60px;
+  font-size: 32px;
+  line-height: 50px;
+  -webkit-box-flex: 0;
+      -ms-flex: none;
+          flex: none;
+}
+
+#header_wrapper #sub_region .content_wrap {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+}
+
+#header_wrapper #sub_region .info {
+  font-size: 12px;
 }
 
 #game_wrapper {
@@ -39,6 +58,21 @@ h1 {
   -webkit-box-shadow: 5px 5px 15px black;
           box-shadow: 5px 5px 15px black;
   border-radius: 15px;
+}
+
+#game_wrapper #worldmap #name_switch {
+  position: relative;
+  z-index: 1000000;
+  left: 5%;
+  margin-top: 10px;
+}
+
+#game_wrapper #worldmap #start_btn {
+  position: relative;
+  z-index: 1000000;
+  left: 79%;
+  margin-top: 10px;
+  width: 170px;
 }
 
 #game_wrapper #minimap {

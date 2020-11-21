@@ -4,7 +4,10 @@ const INITIAL_LATLNG = [35.681, 0];
 
 const WORLDMAP = L.map("worldmap").setView(INITIAL_LATLNG, 2);
 const MINIMAP = L.map("minimap", { zoomControl: false }).setView(INITIAL_LATLNG, 0);
+const MARKER = document.querySelector('.leaflet-marker-pane')
 
+console.log(MARKER);
+const MARKER_URL = 'https://unpkg.com/leaflet@1.4.0/dist/images/marker-icon-2x.png'
 
 const URL = "http://{s}.tile.stamen.com/{variant}/{z}/{x}/{y}.png";
 
@@ -37,6 +40,40 @@ const makeMarker = (lat_lng, name, link) => {
     .openTooltip();
   return Markers_shape[0];
 }
+
+const hiddenName = () => {
+  if (referMarkers.length === 0) return
+  
+  const cauntryNames = document.querySelectorAll('.leaflet-tooltip')
+
+  if (nameHidden) {
+    cauntryNames.forEach((name) => {
+      name.style.visibility = "visible";
+    });
+    nameHidden = false
+    return
+  }
+
+  if (!nameHidden) {
+    cauntryNames.forEach(name => {
+      name.style.visibility = 'hidden'
+    })
+    nameHidden = true
+    return
+  }  
+}
+
+MARKER.addEventListener('click', e => {
+  if (nameHidden) {
+    console.log('ある');
+    // console.log(referMarkers);
+    // referMarkers[0].bindPopup('hello').openPopup()
+  } else {
+    console.log('ない');
+  }
+})
+
+
 
 const removeMarker = (markers) => {
   markers.forEach(marker => {

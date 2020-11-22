@@ -322,13 +322,13 @@ const changeBtn = (text) => {
     START_BTN.classList.remove("btn-info");
     START_BTN.classList.add("btn-danger");
     START_BTN.style.width = "100px";
-    START_BTN.style.left = "85%";
+    START_BTN.style.left = "82%";
   } else if (text === "テストにチャレンジ") {
     START_BTN.textContent = text;
     START_BTN.classList.remove("btn-danger");
     START_BTN.classList.add("btn-info");
     START_BTN.style.width = "170px";
-    START_BTN.style.left = "79%";
+    START_BTN.style.left = "75%";
   }
 };
 

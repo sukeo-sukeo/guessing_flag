@@ -6,11 +6,7 @@ const WORLDMAP = L.map("worldmap").setView(INITIAL_LATLNG, 2);
 const MINIMAP = L.map("minimap", { zoomControl: false }).setView(INITIAL_LATLNG, 0);
 const MARKER = document.querySelector('.leaflet-marker-pane')
 const popUpDom = document.getElementsByClassName("leaflet-popup-pane");
-[...popUpDom].forEach((dom) => {
-  dom.style.visibility = "hidden";
-});
 
-console.log(MARKER);
 const MARKER_URL = 'https://unpkg.com/leaflet@1.4.0/dist/images/marker-icon-2x.png'
 
 const URL = "http://{s}.tile.stamen.com/{variant}/{z}/{x}/{y}.png";
@@ -52,7 +48,6 @@ const hiddenName = () => {
   if (referMarkers.length === 0) return
   
   const cauntryNames = document.getElementsByClassName('leaflet-tooltip')
-  console.log(popUpDom);
   if (nameHidden) {
     [...cauntryNames].forEach((name) => {
       name.style.visibility = "visible";
@@ -101,8 +96,12 @@ const makeCircle = (lat, lng) => {
 }
 
 const firstLading = () => {
-  init().addTo(WORLDMAP)
-  init().addTo(MINIMAP)
+  init().addTo(WORLDMAP);
+  init().addTo(MINIMAP);
+
+  [...popUpDom].forEach((dom) => {
+    dom.style.visibility = "hidden";
+  });
 }
 
 window.onload = firstLading() 

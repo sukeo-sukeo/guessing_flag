@@ -1,16 +1,28 @@
 'use strict'
-onclick
+
 const W_MAP = document.getElementById('worldmap')
 const SELECT_BOX = document.getElementById('sub_region')
 const START_BTN = document.getElementById('start_btn')
+const MENUE_BTN = document.getElementById('menue_btn')
 const SWITCH_BTN = document.getElementById('name_switch')
+const MODAL_MENUE = document.getElementById('status_chart')
 const FLAG_WRAPPER = document.getElementById('cauntry_flag_wrapper')
 const TITLE = document.getElementById("title")
 
+const Q_LEVEL = {
+  easy:    5,
+  normal: 10,
+  hard:   15
+}
+
+let level = Q_LEVEL.normal
+
 let correctCount = null
 let mistakeCount = null
+
 let referMarkers = []
 let referCircle
+let subregionName = null
 
 let isPlaying = false
 let nameHidden = false
@@ -22,52 +34,35 @@ const baseUrl = 'https://restcountries.eu/rest/v2/';
   fetch(baseUrl + 'all')
     .then((res) => res.json())
     .then((data) => {
-      const subregions = makeDict(data)
-      let i = 0
-      subregions.forEach((val, key) => {
-        if (key) {
-          const renameKey = key.replace(key, ja[i])
-          const outlineTag = createTag('div',['class', 'select_btn my-1 mr-3'],false,false)
-          createTag(
-             /*tag*/     "button",
-            [
-              [/*attr1*/ "id", `${key.replace(/\s+/g, "_")}`],
-              [/*attr2*/ "class", `subregion btn btn-dark py-1 px-3`]
-            ],
-             /*value*/   renameKey,
-             /*append*/  outlineTag
-          );
-          const innerTag = createTag('div', ['class', 'content_wrap m-0 p-0'], false, outlineTag)
-          createTag('p', ['class', 'cauntry_count subregion_content m-0 p-0'], `${val}カ国`, innerTag)
-          createTag("p", ["class", "level subregion_content m-0 p-0"], '', innerTag);
-          createTag('a', [['class', 'info subregion_content m-0 p-0'],['href', '#']], `${renameKey}を調べる`, outlineTag)
-          SELECT_BOX.appendChild(outlineTag)
-        }
-        i++;
-      });
+      const headerDict = makeDict(data)
+      createSubregionTags(headerDict);
     })
 })();
 
 //タイトルクリックで世界地図全体図にズームアウト
 TITLE.addEventListener("click", () => WORLDMAP.setView(INITIAL_LATLNG, 2));
 
-SWITCH_BTN.addEventListener("click", () => hiddenName());
-
 START_BTN.addEventListener('click', () => {
   if (isPlaying) {
     if (confirm("テストをあきらめて地域選択にもどりますか？")) {
       changeBtn('テストにチャレンジ')
       clearView()
+      if (dataManage[subregionName].challengeCount !== 0) {
+        dataManage[subregionName].challengeCount--;
+      }
       return
     } else {
       return;
     }
   }
-  console.log(referMarkers);
+
   if (referMarkers.length === 0) {
     alert('地域を選択してください')
     return
   }
+
+  dataManage[subregionName].challengeCount++
+  console.log(dataManage[subregionName]);
   setFlagDOM(referMarkers)
   const MARKERS_DOM = document.querySelectorAll(".leaflet-marker-icon");
   const FLAGS_DOM = document.querySelectorAll(".flag_pic");
@@ -97,10 +92,9 @@ SELECT_BOX.addEventListener('click', event => {
     d.closePopup()
   })
 
-  // hiddenName()
-  // correctCount = 0;
   initElements(FLAG_WRAPPER)
 
+  subregionName = event.target.textContent
   const target = event.target.id.replace(/_/g, " ");
   fetch(baseUrl + 'subregion/' + target)
     .then((res) => res.json())
@@ -110,9 +104,11 @@ SELECT_BOX.addEventListener('click', event => {
     })
     .then((data) => {
       //マーカーを設置
+      console.time('test')
       const markers = data.map(d => {
         return makeMarker([d.latlng[0], d.latlng[1]], d.translations.ja, 'link')
       })
+    console.timeEnd('test')
 
       //マーカーデータの参照を作成
       referMarkers = markers
@@ -124,7 +120,6 @@ SELECT_BOX.addEventListener('click', event => {
         sumLat += marker._latlng.lat
         sumLng += marker._latlng.lng
         marker.addTo(WORLDMAP)
-        console.log(marker._tooltip._content, marker._latlng);
       })
       //ズームしてポインタを表示
       WORLDMAP.setView([sumLat / markers.length, sumLng / markers.length], 4);
@@ -149,10 +144,11 @@ SELECT_BOX.addEventListener('click', event => {
 
 const playGame = (TERGET_DOMS) => {
   isPlaying = true
-  if (correctCount === TERGET_DOMS.length / 2) {
+  if (correctCount === level) {
     isPlaying = false
     clearView('Mission Complete!!')
     changeBtn("テストにチャレンジ");
+    dataManage[subregionName].clearCount++;
     return
   }
   let answers = []
@@ -235,6 +231,35 @@ const makeDict = (data) => {
   return dict;
 };
 
+const createSubregionTags = (dict) => {
+  let i = 0
+  let renameKey = []
+  let japaneseKey = Object.keys(dataManage);
+  dict.forEach((val, key) => {
+    renameKey.push(key.replace(key, japaneseKey[i]))
+    if (key) {
+      const outlineTag = createTag('div', ['class', 'select_btn my-1 mr-3'], false, false)
+      createTag(
+          /*tag*/     "button",
+        [
+          [/*attr1*/ "id", `${key.replace(/\s+/g, "_")}`],
+          [/*attr2*/ "class", `subregion btn btn-dark py-1 px-3`]
+        ],
+          /*value*/   renameKey[i],
+          /*append*/  outlineTag
+      );
+      const innerTag = createTag('div', ['class', 'content_wrap m-0 p-0'], false, outlineTag)
+      createTag('p', ['class', 'cauntry_count subregion_content m-0 p-0'], `${val}カ国`, innerTag)
+      createTag("p", ["class", "level subregion_content m-0 p-0"], '', innerTag);
+      createTag('a', [['class', 'info subregion_content m-0 p-0'],['href', '#']], `${renameKey[i]}を調べる`, outlineTag)
+      SELECT_BOX.appendChild(outlineTag)
+    }
+    i++;
+  });
+  createChart(renameKey);
+}
+
+
 const formatData = (data) => {
   let flagData = [];
   data.forEach((d) => {
@@ -251,18 +276,18 @@ const formatData = (data) => {
 };
 
 const setFlagDOM = (flagData) => {
-  console.log(flagData);
-  flagData.forEach((el) => {
+  for (let i = 0; i < level; i++) {
+    if (i >= flagData.length) return;
     createTag(
       "img",
       [
-        ["src", el._icon.currentSrc],
-        ["class", `flag_pic _ _ ${el._latlng.lat}_${el._latlng.lng}`],
+        ["src", flagData[i]._icon.currentSrc],
+        ["class", `flag_pic _ _ ${flagData[i]._latlng.lat}_${flagData[i]._latlng.lng}`],
       ],
       false,
       FLAG_WRAPPER
     );
-  });
+  }
 };
 
 const shuffle = ([...arr]) => {
@@ -321,14 +346,10 @@ const changeBtn = (text) => {
     START_BTN.textContent = text;
     START_BTN.classList.remove("btn-info");
     START_BTN.classList.add("btn-danger");
-    START_BTN.style.width = "100px";
-    START_BTN.style.left = "82%";
   } else if (text === "テストにチャレンジ") {
     START_BTN.textContent = text;
     START_BTN.classList.remove("btn-danger");
     START_BTN.classList.add("btn-info");
-    START_BTN.style.width = "170px";
-    START_BTN.style.left = "75%";
   }
 };
 
@@ -362,28 +383,97 @@ const createTag = (elementName, attrs, content, parentNode) => {
   return el;
 };
 
-const ja = [
-  "南アジア",
-  "北ヨーロッパ",
-  "南ヨーロッパ",
-  "北アフリカ",
-  "ポリネシア",
-  "中央アフリカ",
-  "カリブ海",
-  "",
-  "南アメリカ",
-  "西アジア",
-  "オーストラリア",
-  "西ヨーロッパ",
-  "東ヨーロッパ",
-  "中央アメリカ",
-  "西アフリカ",
-  "北アメリカ",
-  "南部アフリカ",
-  "東アフリカ",
-  "東南アジア",
-  "東アジア",
-  "メラネシア",
-  "ミクロネシア",
-  "中央アジア",
-];
+const dataManage = {
+  "南アジア": {
+    challengeCount: null,
+    clearCount: null
+  },
+  "北ヨーロッパ": {
+    challengeCount: null,
+    clearCount: null
+  },
+  "南ヨーロッパ": {
+    challengeCount: null,
+    clearCount: null
+  },
+  "北アフリカ": {
+    challengeCount: null,
+    clearCount: null
+  },
+  "ポリネシア": {
+    challengeCount: null,
+    clearCount: null
+  },
+  "中央アフリカ": {
+    challengeCount: null,
+    clearCount: null
+  },
+  "カリブ海": {
+    challengeCount: null,
+    clearCount: null
+  },
+  "": {
+    challengeCount: null,
+    clearCount: null
+  },
+  "南アメリカ": {
+    challengeCount: null,
+    clearCount: null
+  },
+  "西アジア": {
+    challengeCount: null,
+    clearCount: null
+  },
+  "オーストラリア": {
+    challengeCount: null,
+    clearCount: null
+  },
+  "西ヨーロッパ": {
+    challengeCount: null,
+    clearCount: null
+  },
+  "東ヨーロッパ": {
+    challengeCount: null,
+    clearCount: null
+  },
+  "中央アメリカ": {
+    challengeCount: null,
+    clearCount: null
+  },
+  "西アフリカ": {
+    challengeCount: null,
+    clearCount: null
+  },
+  "北アメリカ": {
+    challengeCount: null,
+    clearCount: null
+  },
+  "南部アフリカ": {
+    challengeCount: null,
+    clearCount: null
+  },
+  "東アフリカ": {
+    challengeCount: null,
+    clearCount: null
+  },
+  "東南アジア": {
+    challengeCount: null,
+    clearCount: null
+  },
+  "東アジア": {
+    challengeCount: null,
+    clearCount: null
+  },
+  "メラネシア": {
+    challengeCount: null,
+    clearCount: null
+  },
+  "ミクロネシア": {
+    challengeCount: null,
+    clearCount: null
+  },
+  "中央アジア": {
+    challengeCount: null,
+    clearCount: null
+  },
+};

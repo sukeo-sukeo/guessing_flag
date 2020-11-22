@@ -45,6 +45,7 @@ const makeMarker = (lat_lng, name, link) => {
 }
 
 const hiddenName = () => {
+  console.log(referMarkers);
   if (referMarkers.length === 0) return
   
   const cauntryNames = document.getElementsByClassName('leaflet-tooltip')

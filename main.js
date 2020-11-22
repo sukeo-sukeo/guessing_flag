@@ -42,6 +42,8 @@ const baseUrl = 'https://restcountries.eu/rest/v2/';
 //タイトルクリックで世界地図全体図にズームアウト
 TITLE.addEventListener("click", () => WORLDMAP.setView(INITIAL_LATLNG, 2));
 
+SWITCH_BTN.addEventListener('click', () => hiddenName());
+
 START_BTN.addEventListener('click', () => {
   if (isPlaying) {
     if (confirm("テストをあきらめて地域選択にもどりますか？")) {

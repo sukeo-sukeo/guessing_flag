@@ -385,6 +385,7 @@ const createTag = (elementName, attrs, content, parentNode) => {
   return el;
 };
 
+
 const dataManage = {
   "南アジア": {
     challengeCount: null,
